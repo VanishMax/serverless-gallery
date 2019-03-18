@@ -17,7 +17,7 @@
         }
         .sidebar {
             position: fixed;
-            padding-top: 56px;
+            padding: 56px 0 0;
             top: 0;
             bottom: 0;
             left: 0;
@@ -33,9 +33,17 @@
         }
         .file {
             position: absolute;
-            opacity: 0;
-            right: 0;
+            left: calc((100% - 60%) / 2);
             top: 0;
+            opacity: 0;
+            width: 60%;
+        }
+        .nameInputGroup {
+            width: 90%;
+            margin: 0 auto;
+        }
+        #nameInput:hover {
+            background: #fff;
         }
 
         #gallery {
@@ -86,12 +94,22 @@
                            Upload Picture
                            <input type="hidden" name="key" id="keyInput" value="">
 
-                           <input type="file" class="file" name="file" id="file" onchange="handleFileChange()"/>
+                           <input type="file" class="btn file" name="file" id="file" onchange="handleFileChange()"/>
                        </button>
                    </div>
                    <div class="row justify-content-center">
                        <p id="fileMessage">Filename</p>
                    </div>
+
+                   <div class="row justify-content-center nameInputGroup">
+                       <div class="form-group">
+                           <label for="nameInput">Your message</label>
+                           <input type="text" class="form-control btn-outline-success" id="nameInput" onchange="handleNameChange()"
+                                  aria-describedby="nameHelp" placeholder="Vasya was here" maxlength="30">
+                           <small id="nameHelp" class="form-text text-muted">Please, be concise. You have only 30 symbols</small>
+                       </div>
+                   </div>
+
                    <div class="row justify-content-center">
                        <input type="submit" name="submit" class="btn btn-outline-success">
                    </div>
@@ -115,6 +133,7 @@
         </div>
     </main>
 </div>
+
 <script>
     var photos = [];
 
@@ -123,9 +142,14 @@
       for(var i = 0; i < photos.length; i++) {
         var image = document.createElement("div");
         if(photos[i]) {
-          image.innerHTML = `<img src="http://serverlessgallery.s3.amazonaws.com/${photos[i]}" alt="">`;
+          var name = photos[i].match(/CSVs\/(.+)\./i)[1];
+          image.innerHTML = `
+            <img src="http://serverlessgallery.s3.amazonaws.com/${photos[i]}" alt="">
+            <p>${name}</p>`;
         } else {
-          image.innerHTML = `<img src="" alt="">`;
+          image.innerHTML = `
+            <img src="" alt="">
+            <p></p>`;
         }
 
         var gcolums = document.getElementsByClassName("gcolumn");
@@ -139,6 +163,12 @@
       document.getElementById("keyInput").value = "CSVs/" + file.name;
     }
 
+    function handleNameChange() {
+      console.log(event);
+      var extension = document.getElementById("fileMessage").innerText.split('.').pop().toLowerCase();
+      document.getElementById("fileMessage").innerText = event.target.value + "." + extension;
+    }
+
     function handleSubmit() {
       var file = document.getElementById("file").files[0];
       var extension = file.name.split('.').pop().toLowerCase();
@@ -150,10 +180,13 @@
         event.preventDefault();
       } else {
         document.getElementById("submitMessage").innerText = "";
+        document.getElementById("keyInput").value = "CSVs/" + document.getElementById("fileMessage").innerText;
 
         photos.unshift("");
         showGallery();
         var img = document.getElementsByClassName("gcolumn")[0].childNodes[0].childNodes[0];
+        document.getElementsByClassName("gcolumn")[0].childNodes[0].childNodes[1].innerText =
+          document.getElementById("fileMessage").innerText.match(/CSVs\/(.+)\./i)[1];
         var reader = new FileReader();
 
         reader.onloadend = function () {
