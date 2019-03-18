@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <title>Example</title>
+    <style>
+        .navbar {
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+        .sidebar {
+            position: fixed;
+            padding-top: 56px;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        }
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: 100vh;
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .file {
+            position: absolute;
+            opacity: 0;
+            right: 0;
+            top: 0;
+        }
+
+        #gallery {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 24px;
+            padding: 0 4px;
+        }
+        .gcolumn {
+            flex: 25%;
+            max-width: 25%;
+            padding: 0 4px;
+        }
+        .gcolumn img {
+            width: 100%;
+            height: auto;
+            margin-top: 8px;
+            vertical-align: middle;
+        }
+
+        @media screen and (max-width: 800px) {
+            .gcolumn {
+                flex: 50%;
+                max-width: 50%;
+            }
+        }
+        @media screen and (max-width: 600px) {
+            .gcolumn {
+                flex: 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-success">
+    <a class="navbar-brand" href="#">Main page</a>
+</nav>
+
+<div class="container-fluid">
+   <div class="row">
+       <nav id="sidebar" class="col-md-2 d-none d-md-block bg-light sidebar">
+           <div class="sidebar-sticky">
+               <form action="http://serverlessgallery.s3.amazonaws.com/" method="post"
+                     id="uploadCSV" enctype="multipart/form-data" onsubmit="handleSubmit()">
+                   <div class="row justify-content-center">
+                       <button type="button" class="btn btn-outline-success">
+                           Upload Picture
+                           <input type="hidden" name="key" id="keyInput" value="">
+
+                           <input type="file" class="file" name="file" id="file" onchange="handleFileChange()"/>
+                       </button>
+                   </div>
+                   <div class="row justify-content-center">
+                       <p id="fileMessage">Filename</p>
+                   </div>
+                   <div class="row justify-content-center">
+                       <input type="submit" name="submit" class="btn btn-outline-success">
+                   </div>
+                   <div class="row justify-content-center">
+                       <p id="submitMessage" class="text-danger"></p>
+                   </div>
+               </form>
+           </div>
+       </nav>
+   </div>
+
+    <main id="main" role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+        <h2>AWS S3 photos</h2>
+        <div class="container-fluid">
+            <div class="row" id="gallery">
+                <div class="gcolumn"></div>
+                <div class="gcolumn"></div>
+                <div class="gcolumn"></div>
+                <div class="gcolumn"></div>
+            </div>
+        </div>
+    </main>
+</div>
+<script>
+    var photoCounter = 0;
+
+    function handleFileChange() {
+      var file = document.getElementById("file").files[0];
+      console.log(file.size);
+      document.getElementById("fileMessage").innerText = file.name;
+      document.getElementById("keyInput").value = "CSVs/" + file.name;
+    }
+
+    function handleSubmit() {
+      var file = document.getElementById("file").files[0];
+      var extension = file.name.split('.').pop().toLowerCase();
+      console.log(extension);
+      if(extension !== "jpeg" && extension !== "jpg" && extension !== "png" && extension !== "gif") {
+        event.preventDefault();
+        document.getElementById("submitMessage").innerText = "Wrong file type";
+      } else if(file.size > 2097152) {
+        document.getElementById("submitMessage").innerText = "Big size. Should be less than 2MB";
+        event.preventDefault();
+      } else {
+        document.getElementById("submitMessage").innerText = "";
+      }
+    }
+
+    function showGallery() {
+      if(this.status === 200 && this.responseXML != null && this.responseXML.getElementsByTagName('Contents')) {
+        var photosXML = this.responseXML.getElementsByTagName("Contents");
+        var photos = [];
+        for(var photoXML of photosXML) {
+          photos.push(photoXML.childNodes[0].textContent);
+        }
+        photoCounter += photos.length;
+
+        for(var i = 0; i < photos.length; i++) {
+          var image = document.createElement("div");
+          image.innerHTML = `<img src="http://serverlessgallery.s3.amazonaws.com/${photos[i]}" alt="">`;
+
+          var gcolums = document.getElementsByClassName("gcolumn");
+          gcolums[i % 4].appendChild(image);
+        }
+      } else {
+        alert('Cannot load the resource');
+      }
+    }
+
+    window.onload = function () {
+      var xhr = new XMLHttpRequest();
+      xhr.onload = showGallery;
+      xhr.open('GET', 'http://serverlessgallery.s3.amazonaws.com/', true);
+      xhr.send();
+    };
+</script>
+</body>
+</html>
