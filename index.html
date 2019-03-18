@@ -116,11 +116,25 @@
     </main>
 </div>
 <script>
-    var photoCounter = 0;
+    var photos = [];
+
+    function showGallery() {
+      for(var column of document.getElementsByClassName("gcolumn")) column.innerHTML = "";
+      for(var i = 0; i < photos.length; i++) {
+        var image = document.createElement("div");
+        if(photos[i]) {
+          image.innerHTML = `<img src="http://serverlessgallery.s3.amazonaws.com/${photos[i]}" alt="">`;
+        } else {
+          image.innerHTML = `<img src="" alt="">`;
+        }
+
+        var gcolums = document.getElementsByClassName("gcolumn");
+        gcolums[i % 4].appendChild(image);
+      }
+    }
 
     function handleFileChange() {
       var file = document.getElementById("file").files[0];
-      console.log(file.size);
       document.getElementById("fileMessage").innerText = file.name;
       document.getElementById("keyInput").value = "CSVs/" + file.name;
     }
@@ -128,7 +142,6 @@
     function handleSubmit() {
       var file = document.getElementById("file").files[0];
       var extension = file.name.split('.').pop().toLowerCase();
-      console.log(extension);
       if(extension !== "jpeg" && extension !== "jpg" && extension !== "png" && extension !== "gif") {
         event.preventDefault();
         document.getElementById("submitMessage").innerText = "Wrong file type";
@@ -137,25 +150,29 @@
         event.preventDefault();
       } else {
         document.getElementById("submitMessage").innerText = "";
+
+        photos.unshift("");
+        showGallery();
+        var img = document.getElementsByClassName("gcolumn")[0].childNodes[0].childNodes[0];
+        var reader = new FileReader();
+
+        reader.onloadend = function () {
+          console.log(reader);
+          img.src = reader.result;
+        };
+
+        reader.readAsDataURL(file);
       }
     }
 
-    function showGallery() {
+    function parsePhotos() {
       if(this.status === 200 && this.responseXML != null && this.responseXML.getElementsByTagName('Contents')) {
         var photosXML = this.responseXML.getElementsByTagName("Contents");
-        var photos = [];
         for(var photoXML of photosXML) {
           photos.push(photoXML.childNodes[0].textContent);
         }
-        photoCounter += photos.length;
 
-        for(var i = 0; i < photos.length; i++) {
-          var image = document.createElement("div");
-          image.innerHTML = `<img src="http://serverlessgallery.s3.amazonaws.com/${photos[i]}" alt="">`;
-
-          var gcolums = document.getElementsByClassName("gcolumn");
-          gcolums[i % 4].appendChild(image);
-        }
+        showGallery();
       } else {
         alert('Cannot load the resource');
       }
@@ -163,7 +180,7 @@
 
     window.onload = function () {
       var xhr = new XMLHttpRequest();
-      xhr.onload = showGallery;
+      xhr.onload = parsePhotos;
       xhr.open('GET', 'http://serverlessgallery.s3.amazonaws.com/', true);
       xhr.send();
     };
