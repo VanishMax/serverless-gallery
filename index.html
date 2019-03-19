@@ -52,8 +52,30 @@
         .gcolumn img {
             width: 100%;
             height: auto;
-            margin-top: 8px;
             vertical-align: middle;
+        }
+
+        .card {
+            margin-top: 8px;
+            border: none;
+            padding: 0;
+        }
+        .card-img-overlay {
+            display: none;
+            z-index: 100;
+        }
+        .card:hover:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,.5);
+            z-index: 2;
+        }
+        .card:hover .card-img-overlay {
+            display: block;
         }
 
         @media screen and (max-width: 800px) {
@@ -135,19 +157,31 @@
     function showGallery() {
       for(var column of document.getElementsByClassName("gcolumn")) column.innerHTML = "";
       for(var i = 0; i < photos.length; i++) {
-        var image = document.createElement("div");
+
+        var card = document.createElement("div");
+        card.classList.add("card", "text-white");
+
+        var img = document.createElement("img");
+        img.classList.add("card-img");
+
+        var overlayText = document.createElement("div");
+        overlayText.classList.add("card-img-overlay");
+
         if(photos[i]) {
           var name = photos[i].match(/CSVs\/(.+)\./i)[1];
-          image.innerHTML = `
-            <img src="http://serverlessgallery.s3.amazonaws.com/${photos[i]}" alt="">
-            <p>${name}</p>`;
+          img.src = "http://serverlessgallery.s3.amazonaws.com/" + photos[i];
+          img.alt = name;
+          overlayText.innerHTML = `<p class="card-text">${name}</p>`;
         } else {
-          image.innerHTML = `
-            <img src="" alt="">`;
+          img.src = "";
+          img.alt = "";
+          overlayText.innerHTML = `<p class="card-text"></p>`;
         }
 
         var gcolums = document.getElementsByClassName("gcolumn");
-        gcolums[i % 4].appendChild(image);
+        card.appendChild(img);
+        card.appendChild(overlayText);
+        gcolums[i % 4].appendChild(card);
 
         document.getElementById("totalNum").innerText = photos.length.toString();
       }
@@ -180,18 +214,15 @@
 
         photos.unshift("");
         showGallery();
-        console.log(document.getElementsByClassName("gcolumn")[0].childNodes[0].childNodes[1]);
-        var galleryCell = document.getElementsByClassName("gcolumn")[0].childNodes[0];
+
+        var galleryCell = document.getElementsByClassName("gcolumn")[0];
+        var img = galleryCell.getElementsByClassName("card-img")[0];
+        galleryCell.getElementsByClassName("card-text")[0].innerText =
+          document.getElementById("fileMessage").innerText.match(/(.+)\./i)[1];
 
         var reader = new FileReader();
-        reader.onloadend = () => galleryCell.childNodes[1].src = reader.result;
+        reader.onloadend = () => img.src = reader.result;
         reader.readAsDataURL(file);
-
-        var text = document.createElement("p");
-        var textNode = document.createTextNode(document.getElementById("fileMessage").innerText.match(/(.+)\./i)[1]);
-        text.appendChild(textNode);
-        galleryCell.appendChild(text);
-
       }
     }
 
