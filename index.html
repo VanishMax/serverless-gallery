@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <title>Example</title>
+    <title>Serverless Gallery</title>
     <style>
         .sidebar {
             position: fixed;
@@ -33,6 +33,9 @@
         .nameInputGroup {
             width: 90%;
             margin: 0 auto;
+        }
+        .center-text {
+            margin-left: 14px;
         }
 
         #gallery {
@@ -103,7 +106,6 @@
             height: 100%;
             display: block;
         }
-
         .modal.hidden {
             display: none;
         }
@@ -131,9 +133,7 @@
                            <input type="file" class="btn file" name="file" id="file" onchange="handleFileChange()"/>
                        </button>
                    </div>
-                   <div class="row justify-content-center">
-                       <p id="fileMessage">Filename</p>
-                   </div>
+                   <p id="fileMessage" class="center-text">Filename</p>
 
                    <div class="row justify-content-center nameInputGroup">
                        <div class="form-group">
@@ -147,9 +147,7 @@
                    <div class="row justify-content-center">
                        <input type="submit" name="submit" class="btn btn-outline-success">
                    </div>
-                   <div class="row justify-content-center">
-                       <p id="submitMessage" class="text-danger"></p>
-                   </div>
+                   <p id="submitMessage" class="text-danger center-text"></p>
                </form>
 
                <hr>
@@ -157,13 +155,13 @@
                    <button type="button" class="btn btn-outline-danger" id="deleteImages" onclick="handleDeleteButton()">
                        Delete images
                    </button>
-                   <p>
-                       Click here and choose a photo
-                   </p>
                </div>
+               <p class="center-text">
+                   Click here and choose a photo
+               </p>
 
                <hr>
-               <p>
+               <p class="center-text">
                    The demonstration website of how you can build serverless gallery, which stores
                    images in the AWS S3 bucket.
                </p>
