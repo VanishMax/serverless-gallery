@@ -5,9 +5,6 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <title>Example</title>
     <style>
         .sidebar {
@@ -96,6 +93,20 @@
                 max-width: 100%;
             }
         }
+
+        .modal {
+            background-color: rgba(0,0,0,0.4);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -173,9 +184,30 @@
     </main>
 </div>
 
+<div class="modal hidden" tabindex="-1" role="dialog" id="deleteModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete image?</h5>
+                <button type="button" data-dismiss="modal" aria-label="Close" class="closeModal">
+                    <span aria-hidden="true" class="closeModal">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure that the deletion is really necessary? Well, I don't mind but think about it.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="deleteImage()">Delete</button>
+                <button type="button" class="btn btn-secondary closeModal" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     let photos = [];
     let isDelete = false;
+    let nameToDelete = "";
 
     const handleDeleteButton = () => {
       let cards = document.getElementsByClassName("card");
@@ -189,10 +221,45 @@
       isDelete = !isDelete;
     };
 
+    document.addEventListener('click', (event) => {
+      var elem = event.target;
+
+      if((elem.classList.contains("card-img-overlay") || elem.classList.contains("card-text")) && isDelete) {
+        let modal = document.getElementById("deleteModal");
+        modal.classList.remove("hidden");
+
+        if(elem.classList.contains("card-img-overlay")) {
+          nameToDelete = elem.getElementsByClassName("card-text")[0].getAttribute("data-file");
+        } else if(elem.classList.contains("card-text")) {
+          nameToDelete = elem.getAttribute("data-file");
+        }
+
+      } else if(!document.getElementById("deleteModal").classList.contains("hidden")
+            && elem.id === "deleteModal" || elem.classList.contains("closeModal")) {
+        document.getElementById("deleteModal").classList.add("hidden");
+      }
+    });
+
+    const deleteImage = () => {
+      if(nameToDelete) {
+        let xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+          photos.splice(photos.indexOf(nameToDelete), 1);
+          nameToDelete = "";
+          isDelete = false;
+          showGallery();
+        };
+        xhr.open('DELETE', 'http://serverlessgallery.s3.amazonaws.com/' + nameToDelete, true);
+        xhr.send(null);
+        document.getElementById("deleteModal").classList.add("hidden");
+      } else {
+        alert("Could not be deleted");
+      }
+    };
+
     const showGallery = () => {
       for(let column of document.getElementsByClassName("gcolumn")) column.innerHTML = "";
       for(let i = 0; i < photos.length; i++) {
-
         let card = document.createElement("div");
         card.classList.add("card", "text-white", "card-overlay-black");
 
@@ -202,15 +269,15 @@
         let overlayText = document.createElement("div");
         overlayText.classList.add("card-img-overlay");
 
-        if(photos[i]) {
+        if(photos[i].startsWith("data")) {
+          img.src = photos[i];
+          img.alt = "";
+          overlayText.innerHTML = `<p class="card-text" data-file=""></p>`;
+        } else {
           let name = photos[i].match(/CSVs\/(.+)\./i)[1];
           img.src = "http://serverlessgallery.s3.amazonaws.com/" + photos[i];
           img.alt = name;
-          overlayText.innerHTML = `<p class="card-text">${name}</p>`;
-        } else {
-          img.src = "";
-          img.alt = "";
-          overlayText.innerHTML = `<p class="card-text"></p>`;
+          overlayText.innerHTML = `<p class="card-text" data-file="${photos[i]}">${name}</p>`;
         }
 
         let gcolums = document.getElementsByClassName("gcolumn");
@@ -250,16 +317,16 @@
 
           document.getElementById("keyInput").value = "CSVs/" + document.getElementById("fileMessage").innerText;
 
-          photos.unshift("");
-          showGallery();
-
           let galleryCell = document.getElementsByClassName("gcolumn")[0];
-          let img = galleryCell.getElementsByClassName("card-img")[0];
-          galleryCell.getElementsByClassName("card-text")[0].innerText =
-            document.getElementById("fileMessage").innerText.match(/(.+)\./i)[1];
 
           let reader = new FileReader();
-          reader.onloadend = () => img.src = reader.result;
+          reader.onloadend = () => {
+            photos.unshift(reader.result);
+            showGallery();
+            galleryCell.getElementsByClassName("card-text")[0].innerText =
+              document.getElementById("fileMessage").innerText.match(/(.+)\./i)[1];
+            galleryCell.getElementsByClassName("card-text")[0].setAttribute("data-file", reader.result.toString());
+          };
           reader.readAsDataURL(file);
         }
       } else {
@@ -277,7 +344,6 @@
     };
 
     function parsePhotos() {
-      console.log(this);
       if(this.status === 200 && this.responseXML != null && this.responseXML.getElementsByTagName('Contents')) {
         let photosXML = this.responseXML.getElementsByTagName("Contents");
         for(let photoXML of photosXML) {
