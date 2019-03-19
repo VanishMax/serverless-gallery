@@ -10,11 +10,6 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <title>Example</title>
     <style>
-        .navbar {
-            position: fixed;
-            width: 100%;
-            z-index: 1000;
-        }
         .sidebar {
             position: fixed;
             padding: 56px 0 0;
@@ -76,8 +71,11 @@
     </style>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-success">
-    <a class="navbar-brand" href="#">Main page</a>
+<nav class="navbar navbar-dark bg-success fixed-top">
+    <a class="navbar-brand" href="https://github.com/vanishmax/serverless-gallery" target="_blank">Serverless gallery</a>
+    <div class="form-inline">
+        Total number of images: <span id="totalNum">0</span>
+    </div>
 </nav>
 
 <div class="container-fluid">
@@ -150,6 +148,8 @@
 
         var gcolums = document.getElementsByClassName("gcolumn");
         gcolums[i % 4].appendChild(image);
+
+        document.getElementById("totalNum").innerText = photos.length.toString();
       }
     }
 
