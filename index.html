@@ -71,8 +71,14 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,.5);
             z-index: 2;
+        }
+        .card-overlay-black:hover:after {
+            background: rgba(0,0,0,.5);
+        }
+        .card-overlay-red:hover:after {
+            cursor: pointer;
+            background: rgba(255,0,0,.5);
         }
         .card:hover .card-img-overlay {
             display: block;
@@ -134,6 +140,22 @@
                        <p id="submitMessage" class="text-danger"></p>
                    </div>
                </form>
+
+               <hr>
+               <div class="row justify-content-center">
+                   <button type="button" class="btn btn-outline-danger" id="deleteImages" onclick="handleDeleteButton()">
+                       Delete images
+                   </button>
+                   <p>
+                       Click here and choose a photo
+                   </p>
+               </div>
+
+               <hr>
+               <p>
+                   The demonstration website of how you can build serverless gallery, which stores
+                   images in the AWS S3 bucket.
+               </p>
            </div>
        </nav>
    </div>
@@ -152,23 +174,36 @@
 </div>
 
 <script>
-    var photos = [];
+    let photos = [];
+    let isDelete = false;
 
-    function showGallery() {
-      for(var column of document.getElementsByClassName("gcolumn")) column.innerHTML = "";
-      for(var i = 0; i < photos.length; i++) {
+    const handleDeleteButton = () => {
+      let cards = document.getElementsByClassName("card");
+      for(let card of cards) {
+        if(isDelete) {
+          card.classList.replace("card-overlay-red", "card-overlay-black");
+        } else {
+          card.classList.replace("card-overlay-black", "card-overlay-red");
+        }
+      }
+      isDelete = !isDelete;
+    };
 
-        var card = document.createElement("div");
-        card.classList.add("card", "text-white");
+    const showGallery = () => {
+      for(let column of document.getElementsByClassName("gcolumn")) column.innerHTML = "";
+      for(let i = 0; i < photos.length; i++) {
 
-        var img = document.createElement("img");
+        let card = document.createElement("div");
+        card.classList.add("card", "text-white", "card-overlay-black");
+
+        let img = document.createElement("img");
         img.classList.add("card-img");
 
-        var overlayText = document.createElement("div");
+        let overlayText = document.createElement("div");
         overlayText.classList.add("card-img-overlay");
 
         if(photos[i]) {
-          var name = photos[i].match(/CSVs\/(.+)\./i)[1];
+          let name = photos[i].match(/CSVs\/(.+)\./i)[1];
           img.src = "http://serverlessgallery.s3.amazonaws.com/" + photos[i];
           img.alt = name;
           overlayText.innerHTML = `<p class="card-text">${name}</p>`;
@@ -178,33 +213,33 @@
           overlayText.innerHTML = `<p class="card-text"></p>`;
         }
 
-        var gcolums = document.getElementsByClassName("gcolumn");
+        let gcolums = document.getElementsByClassName("gcolumn");
         card.appendChild(img);
         card.appendChild(overlayText);
         gcolums[i % 4].appendChild(card);
 
         document.getElementById("totalNum").innerText = photos.length.toString();
       }
-    }
+    };
 
-    function handleFileChange() {
-      var file = document.getElementById("file").files[0];
+    const handleFileChange = () => {
+      let file = document.getElementById("file").files[0];
       document.getElementById("fileMessage").innerText = file.name;
       document.getElementById("keyInput").value = "CSVs/" + file.name;
-    }
+    };
 
-    function handleNameKeyUp() {
-      var extension = document.getElementById("fileMessage").innerText.split('.').pop().toLowerCase();
-      var name = event.target.value.replace(/[?\\/%*|:"<>]/gi, "");
+    const handleNameKeyUp = () => {
+      let extension = document.getElementById("fileMessage").innerText.split('.').pop().toLowerCase();
+      let name = event.target.value.replace(/[?\\/%*|:"<>]/gi, "");
       document.getElementById("fileMessage").innerText = name + "." + extension;
-    }
+    };
 
-    function handleSubmit() {
+    const handleSubmit = () => {
       document.getElementById("submitMessage").innerText = "";
 
-      var file = document.getElementById("file").files[0];
+      let file = document.getElementById("file").files[0];
       if(file) {
-        var extension = file.name.split('.').pop().toLowerCase();
+        let extension = file.name.split('.').pop().toLowerCase();
         if(extension !== "jpeg" && extension !== "jpg" && extension !== "png" && extension !== "gif") {
           event.preventDefault();
           document.getElementById("submitMessage").innerText = "Wrong file type";
@@ -218,12 +253,12 @@
           photos.unshift("");
           showGallery();
 
-          var galleryCell = document.getElementsByClassName("gcolumn")[0];
-          var img = galleryCell.getElementsByClassName("card-img")[0];
+          let galleryCell = document.getElementsByClassName("gcolumn")[0];
+          let img = galleryCell.getElementsByClassName("card-img")[0];
           galleryCell.getElementsByClassName("card-text")[0].innerText =
             document.getElementById("fileMessage").innerText.match(/(.+)\./i)[1];
 
-          var reader = new FileReader();
+          let reader = new FileReader();
           reader.onloadend = () => img.src = reader.result;
           reader.readAsDataURL(file);
         }
@@ -231,27 +266,28 @@
        event.preventDefault();
        document.getElementById("submitMessage").innerText = "No file chosen";
       }
-    }
+    };
+
+
+    window.onload = () => {
+      let xhr = new XMLHttpRequest();
+      xhr.onload = parsePhotos;
+      xhr.open('GET', 'http://serverlessgallery.s3.amazonaws.com/', true);
+      xhr.send();
+    };
 
     function parsePhotos() {
+      console.log(this);
       if(this.status === 200 && this.responseXML != null && this.responseXML.getElementsByTagName('Contents')) {
-        var photosXML = this.responseXML.getElementsByTagName("Contents");
-        for(var photoXML of photosXML) {
+        let photosXML = this.responseXML.getElementsByTagName("Contents");
+        for(let photoXML of photosXML) {
           photos.push(photoXML.childNodes[0].textContent);
         }
-
         showGallery();
       } else {
         alert('Cannot load the resource');
       }
     }
-
-    window.onload = function () {
-      var xhr = new XMLHttpRequest();
-      xhr.onload = parsePhotos;
-      xhr.open('GET', 'http://serverlessgallery.s3.amazonaws.com/', true);
-      xhr.send();
-    };
 </script>
 </body>
 </html>
