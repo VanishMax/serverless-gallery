@@ -121,7 +121,7 @@
                    <div class="row justify-content-center nameInputGroup">
                        <div class="form-group">
                            <label for="nameInput">Your message</label>
-                           <input type="text" class="form-control btn-outline-success" id="nameInput"
+                           <input type="text" class="form-control btn-outline-success" id="nameInput" autocomplete="off"
                                   aria-describedby="nameHelp" placeholder="Vasya was here" maxlength="30" onkeyup="handleNameKeyUp()">
                            <small id="nameHelp" class="form-text text-muted">Please, be concise. You have only 30 symbols</small>
                        </div>
@@ -200,29 +200,36 @@
     }
 
     function handleSubmit() {
+      document.getElementById("submitMessage").innerText = "";
+
       var file = document.getElementById("file").files[0];
-      var extension = file.name.split('.').pop().toLowerCase();
-      if(extension !== "jpeg" && extension !== "jpg" && extension !== "png" && extension !== "gif") {
-        event.preventDefault();
-        document.getElementById("submitMessage").innerText = "Wrong file type";
-      } else if(file.size > 2097152) {
-        document.getElementById("submitMessage").innerText = "Big size. Should be less than 2MB";
-        event.preventDefault();
+      if(file) {
+        var extension = file.name.split('.').pop().toLowerCase();
+        if(extension !== "jpeg" && extension !== "jpg" && extension !== "png" && extension !== "gif") {
+          event.preventDefault();
+          document.getElementById("submitMessage").innerText = "Wrong file type";
+        } else if(file.size > 2097152) {
+          document.getElementById("submitMessage").innerText = "Big size. Should be less than 2MB";
+          event.preventDefault();
+        } else {
+
+          document.getElementById("keyInput").value = "CSVs/" + document.getElementById("fileMessage").innerText;
+
+          photos.unshift("");
+          showGallery();
+
+          var galleryCell = document.getElementsByClassName("gcolumn")[0];
+          var img = galleryCell.getElementsByClassName("card-img")[0];
+          galleryCell.getElementsByClassName("card-text")[0].innerText =
+            document.getElementById("fileMessage").innerText.match(/(.+)\./i)[1];
+
+          var reader = new FileReader();
+          reader.onloadend = () => img.src = reader.result;
+          reader.readAsDataURL(file);
+        }
       } else {
-        document.getElementById("submitMessage").innerText = "";
-        document.getElementById("keyInput").value = "CSVs/" + document.getElementById("fileMessage").innerText;
-
-        photos.unshift("");
-        showGallery();
-
-        var galleryCell = document.getElementsByClassName("gcolumn")[0];
-        var img = galleryCell.getElementsByClassName("card-img")[0];
-        galleryCell.getElementsByClassName("card-text")[0].innerText =
-          document.getElementById("fileMessage").innerText.match(/(.+)\./i)[1];
-
-        var reader = new FileReader();
-        reader.onloadend = () => img.src = reader.result;
-        reader.readAsDataURL(file);
+       event.preventDefault();
+       document.getElementById("submitMessage").innerText = "No file chosen";
       }
     }
 
