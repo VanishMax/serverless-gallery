@@ -42,9 +42,6 @@
             width: 90%;
             margin: 0 auto;
         }
-        #nameInput:hover {
-            background: #fff;
-        }
 
         #gallery {
             display: flex;
@@ -104,8 +101,8 @@
                    <div class="row justify-content-center nameInputGroup">
                        <div class="form-group">
                            <label for="nameInput">Your message</label>
-                           <input type="text" class="form-control btn-outline-success" id="nameInput" onchange="handleNameChange()"
-                                  aria-describedby="nameHelp" placeholder="Vasya was here" maxlength="30">
+                           <input type="text" class="form-control btn-outline-success" id="nameInput"
+                                  aria-describedby="nameHelp" placeholder="Vasya was here" maxlength="30" onkeyup="handleNameKeyUp()">
                            <small id="nameHelp" class="form-text text-muted">Please, be concise. You have only 30 symbols</small>
                        </div>
                    </div>
@@ -148,8 +145,7 @@
             <p>${name}</p>`;
         } else {
           image.innerHTML = `
-            <img src="" alt="">
-            <p></p>`;
+            <img src="" alt="">`;
         }
 
         var gcolums = document.getElementsByClassName("gcolumn");
@@ -163,10 +159,10 @@
       document.getElementById("keyInput").value = "CSVs/" + file.name;
     }
 
-    function handleNameChange() {
-      console.log(event);
+    function handleNameKeyUp() {
       var extension = document.getElementById("fileMessage").innerText.split('.').pop().toLowerCase();
-      document.getElementById("fileMessage").innerText = event.target.value + "." + extension;
+      var name = event.target.value.replace(/[?\\/%*|:"<>]/gi, "");
+      document.getElementById("fileMessage").innerText = name + "." + extension;
     }
 
     function handleSubmit() {
@@ -184,17 +180,18 @@
 
         photos.unshift("");
         showGallery();
-        var img = document.getElementsByClassName("gcolumn")[0].childNodes[0].childNodes[0];
-        document.getElementsByClassName("gcolumn")[0].childNodes[0].childNodes[1].innerText =
-          document.getElementById("fileMessage").innerText.match(/CSVs\/(.+)\./i)[1];
+        console.log(document.getElementsByClassName("gcolumn")[0].childNodes[0].childNodes[1]);
+        var galleryCell = document.getElementsByClassName("gcolumn")[0].childNodes[0];
+
         var reader = new FileReader();
-
-        reader.onloadend = function () {
-          console.log(reader);
-          img.src = reader.result;
-        };
-
+        reader.onloadend = () => galleryCell.childNodes[1].src = reader.result;
         reader.readAsDataURL(file);
+
+        var text = document.createElement("p");
+        var textNode = document.createTextNode(document.getElementById("fileMessage").innerText.match(/(.+)\./i)[1]);
+        text.appendChild(textNode);
+        galleryCell.appendChild(text);
+
       }
     }
 
