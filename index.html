@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <title>Serverless Gallery</title>
     <style>
+        .navbar-logo {
+            margin: 0;
+            padding: 0;
+        }
         .sidebar {
             position: fixed;
             padding: 56px 0 0;
@@ -35,6 +39,9 @@
             margin: 0 auto;
         }
         .center-text {
+            border: 2px solid red;
+        }
+        .about {
             margin-left: 14px;
         }
 
@@ -112,10 +119,14 @@
     </style>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-success fixed-top">
-    <a class="navbar-brand" href="https://github.com/vanishmax/serverless-gallery" target="_blank">Serverless gallery</a>
-    <div class="form-inline">
-        Total number of images: <span id="totalNum">0</span>
+<nav class="navbar navbar-dark bg-secondary fixed-top">
+    <a class="navbar-brand" href="#">
+        Serverless gallery
+    </a>
+    <div class="form-inline text-light">
+        <a href="https://github.com/VanishMax/serverless-gallery" target="_blank">
+            <img src="gihub.png" width="32" height="32" alt="github link">
+        </a>
     </div>
 </nav>
 
@@ -124,30 +135,34 @@
        <nav id="sidebar" class="col-md-2 d-none d-md-block bg-light sidebar">
            <div class="sidebar-sticky">
                <form action="http://serverlessgallery.s3.amazonaws.com/" method="post"
-                     id="uploadCSV" enctype="multipart/form-data" onsubmit="handleSubmit()">
+                     id="uploadFile" enctype="multipart/form-data">
                    <div class="row justify-content-center">
-                       <button type="button" class="btn btn-outline-success">
+                       <button type="button" class="btn btn-outline-secondary">
                            Upload Picture
                            <input type="hidden" name="key" id="keyInput" value="">
 
-                           <input type="file" class="btn file" name="file" id="file" onchange="handleFileChange()"/>
+                           <input type="file" class="btn file" name="file" id="file" onchange="handleFileChange()" accept="image/*"/>
                        </button>
                    </div>
-                   <p id="fileMessage" class="center-text">Filename</p>
+                   <div class="container-fluid" align="center">
+                       <p id="fileMessage"></p>
+                   </div>
 
                    <div class="row justify-content-center nameInputGroup">
                        <div class="form-group">
                            <label for="nameInput">Your message</label>
-                           <input type="text" class="form-control btn-outline-success" id="nameInput" autocomplete="off"
+                           <input type="text" class="form-control" id="nameInput" autocomplete="off"
                                   aria-describedby="nameHelp" placeholder="Vasya was here" maxlength="30" onkeyup="handleNameKeyUp()">
                            <small id="nameHelp" class="form-text text-muted">Please, be concise. You have only 30 symbols</small>
                        </div>
                    </div>
 
                    <div class="row justify-content-center">
-                       <input type="submit" name="submit" class="btn btn-outline-success">
+                       <input type="submit" name="btnSubmit" onclick="handleSubmit()" class="btn btn-outline-secondary">
                    </div>
-                   <p id="submitMessage" class="text-danger center-text"></p>
+                   <div class="container-fluid" align="center">
+                       <p id="submitMessage" class="text-danger"></p>
+                   </div>
                </form>
 
                <hr>
@@ -156,12 +171,15 @@
                        Delete images
                    </button>
                </div>
-               <p class="center-text">
-                   Click here and choose a photo
-               </p>
+               <div class="container-fluid" align="center">
+                   <p>
+                       Click here and choose a photo
+                   </p>
+               </div>
+
 
                <hr>
-               <p class="center-text">
+               <p class="about">
                    The demonstration website of how you can build serverless gallery, which stores
                    images in the AWS S3 bucket.
                </p>
@@ -283,53 +301,81 @@
         card.appendChild(overlayText);
         gcolums[i % 4].appendChild(card);
 
-        document.getElementById("totalNum").innerText = photos.length.toString();
       }
     };
 
     const handleFileChange = () => {
       let file = document.getElementById("file").files[0];
-      document.getElementById("fileMessage").innerText = file.name;
-      document.getElementById("keyInput").value = "CSVs/" + file.name;
+      if(file.name.length > 34) {
+        var extension = file.name.split('.').pop().toLowerCase();
+        document.getElementById("keyInput").value = file.name.substr(0, 30) + "." + extension;
+        document.getElementById("fileMessage").innerText = file.name.substr(0, 30) + "." + extension;
+      } else {
+        document.getElementById("keyInput").value = file.name;
+        document.getElementById("fileMessage").innerText = file.name;
+      }
     };
 
     const handleNameKeyUp = () => {
-      let extension = document.getElementById("fileMessage").innerText.split('.').pop().toLowerCase();
+      let extension = document.getElementById("keyInput").value.split('.').pop().toLowerCase();
       let name = event.target.value.replace(/[?\\/%*|:"<>]/gi, "");
-      document.getElementById("fileMessage").innerText = name + "." + extension;
+      document.getElementById("keyInput").value = name + "." + extension;
     };
 
     const handleSubmit = () => {
+      event.preventDefault();
+
       document.getElementById("submitMessage").innerText = "";
 
-      let file = document.getElementById("file").files[0];
-      if(file) {
-        let extension = file.name.split('.').pop().toLowerCase();
-        if(extension !== "jpeg" && extension !== "jpg" && extension !== "png" && extension !== "gif") {
-          event.preventDefault();
-          document.getElementById("submitMessage").innerText = "Wrong file type";
-        } else if(file.size > 2097152) {
-          document.getElementById("submitMessage").innerText = "Big size. Should be less than 2MB";
-          event.preventDefault();
-        } else {
-
-          document.getElementById("keyInput").value = "CSVs/" + document.getElementById("fileMessage").innerText;
-
-          let galleryCell = document.getElementsByClassName("gcolumn")[0];
-
-          let reader = new FileReader();
-          reader.onloadend = () => {
-            photos.unshift(reader.result);
-            showGallery();
-            galleryCell.getElementsByClassName("card-text")[0].innerText =
-              document.getElementById("fileMessage").innerText.match(/(.+)\./i)[1];
-            galleryCell.getElementsByClassName("card-text")[0].setAttribute("data-file", reader.result.toString());
-          };
-          reader.readAsDataURL(file);
-        }
+      if(photos.length > 30) {
+        document.getElementById("submitMessage").innerText = "No way to store more than 30 photos";
       } else {
-       event.preventDefault();
-       document.getElementById("submitMessage").innerText = "No file chosen";
+        let file = document.getElementById("file").files[0];
+        if(file) {
+          let extension = file.name.split('.').pop().toLowerCase();
+          if(extension !== "jpeg" && extension !== "jpg" && extension !== "png" && extension !== "gif") {
+            document.getElementById("submitMessage").innerText = "Wrong file type";
+          } else if(file.size > 2097152) {
+            document.getElementById("submitMessage").innerText = "Big size. Should be less than 2MB";
+          } else {
+
+            document.getElementById("keyInput").value = "CSVs/" + document.getElementById("keyInput").value;
+
+            let galleryCell = document.getElementsByClassName("gcolumn")[0];
+
+            let reader = new FileReader();
+            reader.onload = () => {
+              let filename = reader.result;
+
+
+              var img = new Image();
+              img.onload = () => {
+                if(img.height / img.width > 3 || img.width / img.height > 3) {
+                  document.getElementById("submitMessage").innerText = "Do not even try to upload it!";
+                } else {
+
+                  photos.unshift(filename);
+                  showGallery();
+
+                  galleryCell.getElementsByClassName("card-text")[0].innerText =
+                    document.getElementById("keyInput").value.match(/CSVs\/(.+)\./i)[1];
+                  galleryCell.getElementsByClassName("card-text")[0].setAttribute("data-file", filename.toString());
+
+                  document.getElementById("uploadFile").submit();
+
+                  // Clear the inputs after submission
+                  document.getElementById("file").files[0] = null;
+                  document.getElementById("keyInput").value = "";
+                  document.getElementById("nameInput").value = "";
+                }
+              };
+              img.src = filename;
+            };
+            reader.readAsDataURL(file);
+          }
+        } else {
+          document.getElementById("submitMessage").innerText = "No file chosen";
+        }
       }
     };
 
