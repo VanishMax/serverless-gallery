@@ -7,10 +7,6 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <title>Serverless Gallery</title>
     <style>
-        .navbar-logo {
-            margin: 0;
-            padding: 0;
-        }
         .sidebar {
             position: fixed;
             padding: 56px 0 0;
@@ -37,9 +33,6 @@
         .nameInputGroup {
             width: 90%;
             margin: 0 auto;
-        }
-        .center-text {
-            border: 2px solid red;
         }
         .about {
             margin-left: 14px;
@@ -105,7 +98,7 @@
         }
 
         .modal {
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0,0,0,0.8);
             position: fixed;
             top: 0;
             left: 0;
@@ -116,6 +109,38 @@
         .modal.hidden {
             display: none;
         }
+        .modContent {
+            background: none;
+            border: none;
+        }
+        .photoContent {
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            height: 60vh;
+            max-height: 80vh;
+            width: 100%;
+        }
+        .photoContent figure {
+            height: 100%;
+            overflow: hidden;
+        }
+        .photoContent img {
+            width: 100%;
+            height: auto;
+            vertical-align: middle;
+        }
+        .photoContent figcaption {
+            text-align: center;
+        }
+        .photoContent figcaption span {
+            background-color: black;
+            border: 10px solid black;
+            border-bottom-left-radius: 25% 100%;
+            border-bottom-right-radius: 25% 100%;
+            border-top-left-radius: 25% 100%;
+            border-top-right-radius: 25% 100%;
+        }
     </style>
 </head>
 <body>
@@ -125,7 +150,7 @@
     </a>
     <div class="form-inline text-light">
         <a href="https://github.com/VanishMax/serverless-gallery" target="_blank">
-            <img src="gihub.png" width="32" height="32" alt="github link">
+            <img src="github.png" width="32" height="32" alt="github link">
         </a>
     </div>
 </nav>
@@ -220,10 +245,28 @@
     </div>
 </div>
 
+<div class="modal hidden" tabindex="-1" role="dialog" id="galleryModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content modContent">
+            <div class="container-fluid photoContent">
+                <figure>
+                    <figcaption class="text-white">
+                        <span class="imgModalName">
+                            The img description goes here
+                        </span>
+                    </figcaption>
+                    <img src="github.png" class="galleryModalImg" alt="">
+                </figure>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    const bucketLink = "http://serverlessgallery.s3.amazonaws.com/";
     let photos = [];
     let isDelete = false;
-    let nameToDelete = "";
+    let clickedFilename = "";
 
     const handleDeleteButton = () => {
       let cards = document.getElementsByClassName("card");
@@ -237,19 +280,40 @@
       isDelete = !isDelete;
     };
 
+    // Listen to clicks for dynamically added elements
     document.addEventListener('click', (event) => {
       var elem = event.target;
+      console.log(elem);
 
-      if((elem.classList.contains("card-img-overlay") || elem.classList.contains("card-text")) && isDelete) {
-        let modal = document.getElementById("deleteModal");
-        modal.classList.remove("hidden");
+      // Click at the photo overlay or the overlay text
+      if((elem.classList.contains("card-img-overlay") || elem.classList.contains("card-text"))) {
 
-        if(elem.classList.contains("card-img-overlay")) {
-          nameToDelete = elem.getElementsByClassName("card-text")[0].getAttribute("data-file");
-        } else if(elem.classList.contains("card-text")) {
-          nameToDelete = elem.getAttribute("data-file");
+        // Extract the name of the file from special attribute
+        if (elem.classList.contains("card-img-overlay")) {
+          clickedFilename = elem.getElementsByClassName("card-text")[0].getAttribute("data-file");
+        } else if (elem.classList.contains("card-text")) {
+          clickedFilename = elem.getAttribute("data-file");
         }
 
+        // If delete - open deletion modal
+        if (isDelete) {
+          let modal = document.getElementById("deleteModal");
+          modal.classList.remove("hidden");
+
+          // If not delete - open gallery modal
+        } else {
+          let modal = document.getElementById("galleryModal");
+          modal.getElementsByClassName("galleryModalImg")[0].src = bucketLink + clickedFilename;
+          modal.getElementsByClassName("imgModalName")[0].innerText = clickedFilename.match(/CSVs\/(.+)\./i)[0];
+          modal.classList.remove("hidden");
+        }
+
+        // Close galleryModal after clicking at the !image || !capture
+      } else if(!document.getElementById("galleryModal").classList.contains("hidden") &&
+            (elem.id === "galleryModal" || elem.classList.contains("photoContent") || elem.classList.contains("text-white"))) {
+        document.getElementById("galleryModal").classList.add("hidden");
+
+        // Click at the element that can close the deletion modal
       } else if(!document.getElementById("deleteModal").classList.contains("hidden")
             && elem.id === "deleteModal" || elem.classList.contains("closeModal")) {
         document.getElementById("deleteModal").classList.add("hidden");
@@ -257,15 +321,15 @@
     });
 
     const deleteImage = () => {
-      if(nameToDelete) {
+      if(clickedFilename) {
         let xhr = new XMLHttpRequest();
         xhr.onload = function () {
-          photos.splice(photos.indexOf(nameToDelete), 1);
-          nameToDelete = "";
+          photos.splice(photos.indexOf(clickedFilename), 1);
+          clickedFilename = "";
           isDelete = false;
           showGallery();
         };
-        xhr.open('DELETE', 'http://serverlessgallery.s3.amazonaws.com/' + nameToDelete, true);
+        xhr.open('DELETE', bucketLink + clickedFilename, true);
         xhr.send(null);
         document.getElementById("deleteModal").classList.add("hidden");
       } else {
@@ -291,7 +355,7 @@
           overlayText.innerHTML = `<p class="card-text" data-file=""></p>`;
         } else {
           let name = photos[i].match(/CSVs\/(.+)\./i)[1];
-          img.src = "http://serverlessgallery.s3.amazonaws.com/" + photos[i];
+          img.src = bucketLink + photos[i];
           img.alt = name;
           overlayText.innerHTML = `<p class="card-text" data-file="${photos[i]}">${name}</p>`;
         }
@@ -383,7 +447,7 @@
     window.onload = () => {
       let xhr = new XMLHttpRequest();
       xhr.onload = parsePhotos;
-      xhr.open('GET', 'http://serverlessgallery.s3.amazonaws.com/', true);
+      xhr.open('GET', bucketLink, true);
       xhr.send();
     };
 
