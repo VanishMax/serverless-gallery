@@ -114,6 +114,12 @@
     background: none;
     border: none;
 }
+
+#trashOne, #downloadOne {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
 .photoContent {
     padding: 0;
     display: flex;

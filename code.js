@@ -1,19 +1,22 @@
 const bucketLink = "http://serverlessgallery.s3.amazonaws.com/";
 let photos = [];
-let isDelete = false;
 let isGalleryOpened = false;
 let clickedFilename = "";
 
-const handleDeleteButton = () => {
-  let cards = document.getElementsByClassName("card");
-  for(let card of cards) {
-    if(isDelete) {
-      card.classList.replace("card-overlay-red", "card-overlay-black");
-    } else {
-      card.classList.replace("card-overlay-black", "card-overlay-red");
-    }
+const handleDeleteOne = () => {
+  if(isGalleryOpened) {
+    let xhr = new XMLHttpRequest();
+    xhr.onload = function () {
+      photos.splice(photos.indexOf(isGalleryOpened), 1);
+      isGalleryOpened = false;
+      document.getElementById("galleryModal").classList.add("hidden");
+      showGallery();
+    };
+    xhr.open('DELETE', bucketLink + clickedFilename, true);
+    xhr.send(null);
+  } else {
+    alert("Could not be deleted");
   }
-  isDelete = !isDelete;
 };
 
 // Listen to clicks for dynamically added elements
@@ -30,19 +33,11 @@ document.addEventListener('click', (event) => {
       clickedFilename = elem.getAttribute("data-file");
     }
 
-    // If delete - open deletion modal
-    if (isDelete) {
-      let modal = document.getElementById("deleteModal");
-      modal.classList.remove("hidden");
-
-      // If not delete - open gallery modal
-    } else {
-      let modal = document.getElementById("galleryModal");
-      modal.getElementsByClassName("galleryModalImg")[0].src = bucketLink + clickedFilename;
-      modal.getElementsByClassName("imgModalName")[0].innerText = clickedFilename.match(/CSVs\/(.+)\./i)[1];
-      isGalleryOpened = clickedFilename;
-      modal.classList.remove("hidden");
-    }
+    let modal = document.getElementById("galleryModal");
+    modal.getElementsByClassName("galleryModalImg")[0].src = bucketLink + clickedFilename;
+    modal.getElementsByClassName("imgModalName")[0].innerText = clickedFilename.match(/CSVs\/(.+)\./i)[1];
+    isGalleryOpened = clickedFilename;
+    modal.classList.remove("hidden");
 
     // Close galleryModal after clicking at the !image || !capture
   } else if(isGalleryOpened && (elem.id === "galleryModal" || elem.classList.contains("photoContent")
@@ -108,23 +103,6 @@ document.onkeydown = (event) => {
   } else if(isGalleryOpened && event.key === "Escape") {
     isGalleryOpened = false;
     document.getElementById("galleryModal").classList.add("hidden");
-  }
-};
-
-const deleteImage = () => {
-  if(clickedFilename) {
-    let xhr = new XMLHttpRequest();
-    xhr.onload = function () {
-      photos.splice(photos.indexOf(clickedFilename), 1);
-      clickedFilename = "";
-      isDelete = false;
-      showGallery();
-    };
-    xhr.open('DELETE', bucketLink + clickedFilename, true);
-    xhr.send(null);
-    document.getElementById("deleteModal").classList.add("hidden");
-  } else {
-    alert("Could not be deleted");
   }
 };
 

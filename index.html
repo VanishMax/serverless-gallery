@@ -15,7 +15,7 @@
     </a>
     <div class="form-inline text-light">
         <a href="https://github.com/VanishMax/serverless-gallery" target="_blank">
-            <img src="github.png" width="32" height="32" alt="github link">
+            <img src="static/github.png" width="32" height="32" alt="github link">
         </a>
     </div>
 </nav>
@@ -56,19 +56,6 @@
                </form>
 
                <hr>
-               <div class="row justify-content-center">
-                   <button type="button" class="btn btn-outline-danger" id="deleteImages" onclick="handleDeleteButton()">
-                       Delete images
-                   </button>
-               </div>
-               <div class="container-fluid" align="center">
-                   <p>
-                       Click here and choose a photo
-                   </p>
-               </div>
-
-
-               <hr>
                <p class="about">
                    The demonstration website of how you can build serverless gallery, which stores
                    images in the AWS S3 bucket.
@@ -90,27 +77,17 @@
     </main>
 </div>
 
-<div class="modal hidden" tabindex="-1" role="dialog" id="deleteModal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Delete image?</h5>
-                <button type="button" data-dismiss="modal" aria-label="Close" class="closeModal">
-                    <span aria-hidden="true" class="closeModal">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure that the deletion is really necessary? Well, I don't mind but think about it.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" onclick="deleteImage()">Delete</button>
-                <button type="button" class="btn btn-primary closeModal" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="modal hidden" tabindex="-1" role="dialog" id="galleryModal">
+    <nav class="navbar navbar-dark bg-secondary fixed-top">
+        <a class="navbar-brand" href="#">
+            Serverless gallery
+        </a>
+        <div class="form-inline text-light">
+            <img src="static/download.png" alt="download image" id="downloadOne" onclick="handleDownloadOne()">
+            <img src="static/trash.png" alt="delete image" id="trashOne" onclick="handleDeleteOne()">
+        </div>
+    </nav>
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content modContent">
             <div class="container-fluid photoContent">
@@ -122,7 +99,7 @@
                             The img description goes here
                         </span>
                     </figcaption>
-                    <img src="github.png" class="galleryModalImg" alt="">
+                    <img src="static/github.png" class="galleryModalImg" alt="">
                 </figure>
             </div>
         </div>
