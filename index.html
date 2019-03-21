@@ -266,6 +266,7 @@
     const bucketLink = "http://serverlessgallery.s3.amazonaws.com/";
     let photos = [];
     let isDelete = false;
+    let isGalleryOpened = false;
     let clickedFilename = "";
 
     const handleDeleteButton = () => {
@@ -283,7 +284,6 @@
     // Listen to clicks for dynamically added elements
     document.addEventListener('click', (event) => {
       var elem = event.target;
-      console.log(elem);
 
       // Click at the photo overlay or the overlay text
       if((elem.classList.contains("card-img-overlay") || elem.classList.contains("card-text"))) {
@@ -304,13 +304,15 @@
         } else {
           let modal = document.getElementById("galleryModal");
           modal.getElementsByClassName("galleryModalImg")[0].src = bucketLink + clickedFilename;
-          modal.getElementsByClassName("imgModalName")[0].innerText = clickedFilename.match(/CSVs\/(.+)\./i)[0];
+          modal.getElementsByClassName("imgModalName")[0].innerText = clickedFilename.match(/CSVs\/(.+)\./i)[1];
+          isGalleryOpened = clickedFilename;
           modal.classList.remove("hidden");
         }
 
         // Close galleryModal after clicking at the !image || !capture
-      } else if(!document.getElementById("galleryModal").classList.contains("hidden") &&
-            (elem.id === "galleryModal" || elem.classList.contains("photoContent") || elem.classList.contains("text-white"))) {
+      } else if(isGalleryOpened && (elem.id === "galleryModal" || elem.classList.contains("photoContent")
+            || elem.classList.contains("text-white"))) {
+        isGalleryOpened = false;
         document.getElementById("galleryModal").classList.add("hidden");
 
         // Click at the element that can close the deletion modal
@@ -319,6 +321,36 @@
         document.getElementById("deleteModal").classList.add("hidden");
       }
     });
+
+    document.onkeydown = (event) => {
+      if(isGalleryOpened && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
+        let modal = document.getElementById("galleryModal");
+
+        let newSrc;
+        let photoIndex = photos.indexOf(isGalleryOpened);
+        if(event.key === "ArrowRight") {
+          if(photoIndex === photos.length - 1) {
+            newSrc = photos[0];
+          } else {
+            newSrc = photos[photoIndex + 1];
+          }
+        } else if(event.key === "ArrowLeft") {
+          if(photoIndex === 0) {
+            newSrc = photos[photos.length - 1];
+          } else {
+            newSrc = photos[photoIndex - 1];
+          }
+        }
+
+        isGalleryOpened = newSrc;
+        modal.getElementsByClassName("galleryModalImg")[0].src = bucketLink + newSrc;
+        modal.getElementsByClassName("imgModalName")[0].innerText = newSrc.match(/CSVs\/(.+)\./i)[1];
+
+      } else if(isGalleryOpened && event.key === "Escape") {
+        isGalleryOpened = false;
+        document.getElementById("galleryModal").classList.add("hidden");
+      }
+    };
 
     const deleteImage = () => {
       if(clickedFilename) {
