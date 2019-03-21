@@ -20,6 +20,18 @@
     </div>
 </nav>
 
+<nav class="navbar navbar-dark bg-primary fixed-top hidden" id="selectedNavbar">
+    <a class="navbar-brand" href="#">
+        Serverless gallery
+    </a>
+    <div class="form-inline text-light">
+        <a href="" download="" id="downloadMultiLink">
+            <img src="static/download.png" alt="download image" id="downloadMulti" onclick="handleDownloadMulti()">
+        </a>
+        <img src="static/trash.png" alt="delete image" id="trashMulti" onclick="handleDeleteMulti()">
+    </div>
+</nav>
+
 <div class="container-fluid">
    <div class="row">
        <nav id="sidebar" class="col-md-2 d-none d-md-block bg-light sidebar">

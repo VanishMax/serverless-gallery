@@ -1,5 +1,6 @@
 const bucketLink = "http://serverlessgallery.s3.amazonaws.com/";
 let photos = [];
+let selected = [];
 let isGalleryOpened = false;
 let clickedFilename = "";
 
@@ -40,7 +41,7 @@ document.addEventListener('click', (event) => {
     isGalleryOpened = clickedFilename;
     modal.classList.remove("hidden");
 
-    // Close galleryModal after clicking at the !image || !capture
+    // Close galleryModal after clicking at the !content || !capture
   } else if(isGalleryOpened && (elem.id === "galleryModal" || elem.classList.contains("photoContent")
     || elem.classList.contains("text-white"))) {
     isGalleryOpened = false;
@@ -48,28 +49,44 @@ document.addEventListener('click', (event) => {
 
     // Click at the Arrows at the photo gallery
   } else if(isGalleryOpened && elem.classList.contains("arrow")) {
-      let modal = document.getElementById("galleryModal");
+    let modal = document.getElementById("galleryModal");
 
-      let newSrc;
-      let photoIndex = photos.indexOf(isGalleryOpened);
-      if(elem.classList.contains("rightArrow")) {
-        if(photoIndex === photos.length - 1) {
-          newSrc = photos[0];
-        } else {
-          newSrc = photos[photoIndex + 1];
-        }
-      } else if(elem.classList.contains("leftArrow")) {
-        if(photoIndex === 0) {
-          newSrc = photos[photos.length - 1];
-        } else {
-          newSrc = photos[photoIndex - 1];
-        }
+    let newSrc;
+    let photoIndex = photos.indexOf(isGalleryOpened);
+    if(elem.classList.contains("rightArrow")) {
+      if(photoIndex === photos.length - 1) {
+        newSrc = photos[0];
+      } else {
+        newSrc = photos[photoIndex + 1];
       }
-
-      isGalleryOpened = newSrc;
-      modal.getElementsByClassName("galleryModalImg")[0].src = bucketLink + newSrc;
-      modal.getElementsByClassName("imgModalName")[0].innerText = newSrc.match(/CSVs\/(.+)\./i)[1];
+    } else if(elem.classList.contains("leftArrow")) {
+      if(photoIndex === 0) {
+        newSrc = photos[photos.length - 1];
+      } else {
+        newSrc = photos[photoIndex - 1];
+      }
     }
+
+    isGalleryOpened = newSrc;
+    modal.getElementsByClassName("galleryModalImg")[0].src = bucketLink + newSrc;
+    modal.getElementsByClassName("imgModalName")[0].innerText = newSrc.match(/CSVs\/(.+)\./i)[1];
+
+  } else if(elem.classList.contains("unselected")) {
+    let filename = elem.nextElementSibling.getElementsByClassName("card-text")[0].getAttribute("data-file");
+    selected.push(filename);
+    console.log(selected.length);
+    document.getElementById("selectedNavbar").classList.remove("hidden");
+    elem.classList.replace("unselected", "selected");
+
+  } else if(elem.classList.contains("selected")) {
+    let filename = elem.nextElementSibling.getElementsByClassName("card-text")[0].getAttribute("data-file");
+    document.getElementById("selectedNavbar").classList.add("hidden");
+    selected.splice(selected.indexOf(filename), 1);
+    console.log(selected.length);
+    if(selected.length === 0) {
+      elem.classList.replace("selected", "unselected");
+    }
+  }
 });
 
 document.onkeydown = (event) => {
@@ -102,6 +119,14 @@ document.onkeydown = (event) => {
   }
 };
 
+// How gallery is interpreted:
+// <div class="card text-white card-overlay-black">
+//   <img class="card-img" src="bucket..com/photo-url" alt="photo-name">
+//   <p class="card-overlay-select unselected"></p>
+//   <div class="card-img-overlay">
+//     <p class="card-text" data-file="file-url">File name</p>
+//   </div
+// </div>
 const showGallery = () => {
   for(let column of document.getElementsByClassName("gcolumn")) column.innerHTML = "";
   for(let i = 0; i < photos.length; i++) {
@@ -113,6 +138,9 @@ const showGallery = () => {
 
     let overlayText = document.createElement("div");
     overlayText.classList.add("card-img-overlay");
+
+    let overlaySelect = document.createElement("p");
+    overlaySelect.classList.add("card-select", "unselected");
 
     if(photos[i].startsWith("data")) {
       img.src = photos[i];
@@ -127,6 +155,7 @@ const showGallery = () => {
 
     let gcolums = document.getElementsByClassName("gcolumn");
     card.appendChild(img);
+    card.appendChild(overlaySelect);
     card.appendChild(overlayText);
     gcolums[i % 4].appendChild(card);
 
