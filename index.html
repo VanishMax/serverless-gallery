@@ -9,7 +9,7 @@
     <title>Serverless Gallery</title>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-secondary fixed-top">
+<nav class="navbar navbar-dark bg-primary fixed-top">
     <a class="navbar-brand" href="#">
         Serverless gallery
     </a>
@@ -27,7 +27,7 @@
                <form action="http://serverlessgallery.s3.amazonaws.com/" method="post"
                      id="uploadFile" enctype="multipart/form-data">
                    <div class="row justify-content-center">
-                       <button type="button" class="btn btn-outline-secondary">
+                       <button type="button" class="btn btn-outline-primary">
                            Upload Picture
                            <input type="hidden" name="key" id="keyInput" value="">
 
@@ -48,7 +48,7 @@
                    </div>
 
                    <div class="row justify-content-center">
-                       <input type="submit" name="btnSubmit" onclick="handleSubmit()" class="btn btn-outline-secondary">
+                       <input type="submit" name="btnSubmit" onclick="handleSubmit()" class="btn btn-outline-primary">
                    </div>
                    <div class="container-fluid" align="center">
                        <p id="submitMessage" class="text-danger"></p>
@@ -104,7 +104,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" onclick="deleteImage()">Delete</button>
-                <button type="button" class="btn btn-secondary closeModal" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary closeModal" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
