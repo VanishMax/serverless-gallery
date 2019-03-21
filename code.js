@@ -34,6 +34,7 @@ document.addEventListener('click', (event) => {
     }
 
     let modal = document.getElementById("galleryModal");
+    document.getElementById("downloadLink").href = bucketLink + clickedFilename;
     modal.getElementsByClassName("galleryModalImg")[0].src = bucketLink + clickedFilename;
     modal.getElementsByClassName("imgModalName")[0].innerText = clickedFilename.match(/CSVs\/(.+)\./i)[1];
     isGalleryOpened = clickedFilename;
@@ -44,11 +45,6 @@ document.addEventListener('click', (event) => {
     || elem.classList.contains("text-white"))) {
     isGalleryOpened = false;
     document.getElementById("galleryModal").classList.add("hidden");
-
-    // Click at the element that can close the deletion modal
-  } else if(!document.getElementById("deleteModal").classList.contains("hidden")
-    && elem.id === "deleteModal" || elem.classList.contains("closeModal")) {
-    document.getElementById("deleteModal").classList.add("hidden");
 
     // Click at the Arrows at the photo gallery
   } else if(isGalleryOpened && elem.classList.contains("arrow")) {
