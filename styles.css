@@ -140,7 +140,7 @@
     border: none;
 }
 
-#trashOne, #downloadOne {
+#trashOne, #downloadOne, #trashMulti, #downloadMulti {
     margin-right: 15px;
     cursor: pointer;
 }

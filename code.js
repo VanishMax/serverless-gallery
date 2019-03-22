@@ -20,6 +20,26 @@ const handleDeleteOne = () => {
   }
 };
 
+const handleDownloadMulti = () => {
+  for(let select of selected) {
+    console.log(select);
+    document.getElementById("downloadMultiLink").href = bucketLink + select;
+    document.getElementById("downloadMultiLink").click();
+  }
+};
+
+const handleDeleteMulti = () => {
+  for(let select of selected) {
+    let xhr = new XMLHttpRequest();
+    xhr.onload = () => {
+      photos.splice(photos.indexOf(select), 1);
+      showGallery();
+    };
+    xhr.open('DELETE', bucketLink + select, true);
+    xhr.send(null);
+  }
+};
+
 // Listen to clicks for dynamically added elements
 document.addEventListener('click', (event) => {
   var elem = event.target;
@@ -74,17 +94,15 @@ document.addEventListener('click', (event) => {
   } else if(elem.classList.contains("unselected")) {
     let filename = elem.nextElementSibling.getElementsByClassName("card-text")[0].getAttribute("data-file");
     selected.push(filename);
-    console.log(selected.length);
     document.getElementById("selectedNavbar").classList.remove("hidden");
     elem.classList.replace("unselected", "selected");
 
   } else if(elem.classList.contains("selected")) {
     let filename = elem.nextElementSibling.getElementsByClassName("card-text")[0].getAttribute("data-file");
-    document.getElementById("selectedNavbar").classList.add("hidden");
+    elem.classList.replace("selected", "unselected");
     selected.splice(selected.indexOf(filename), 1);
-    console.log(selected.length);
     if(selected.length === 0) {
-      elem.classList.replace("selected", "unselected");
+      document.getElementById("selectedNavbar").classList.add("hidden");
     }
   }
 });
