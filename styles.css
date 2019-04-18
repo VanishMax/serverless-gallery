@@ -55,6 +55,16 @@
     width: 100%;
     height: auto;
     vertical-align: middle;
+    opacity: 0;
+}
+.gcolumn img:not(.initial) {
+    transition: opacity 1s;
+}
+.gcolumn img.initial, .gcolumn img.loaded, .gcolumn img.error {
+    opacity: 1;
+}
+.gcolumn img:not([src]) {
+    visibility: hidden;
 }
 
 .card {

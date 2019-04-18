@@ -4,6 +4,12 @@ let selected = [];
 let isGalleryOpened = false;
 let clickedFilename = "";
 
+var lazyLoadInstance = new LazyLoad({
+  elements_selector: ".card-img"
+});
+
+// TODO: Add lazy load to all funcitons
+
 const handleDeleteOne = () => {
   if(isGalleryOpened) {
     let xhr = new XMLHttpRequest();
@@ -139,7 +145,7 @@ document.onkeydown = (event) => {
 
 // How gallery is interpreted:
 // <div class="card text-white card-overlay-black">
-//   <img class="card-img" src="bucket..com/photo-url" alt="photo-name">
+//   <img class="card-img" data-src="bucket..com/photo-url" alt="photo-name">
 //   <p class="card-overlay-select unselected"></p>
 //   <div class="card-img-overlay">
 //     <p class="card-text" data-file="file-url">File name</p>
@@ -161,12 +167,14 @@ const showGallery = () => {
     overlaySelect.classList.add("card-select", "unselected");
 
     if(photos[i].startsWith("data")) {
-      img.src = photos[i];
+      img.setAttribute("data-src", photos[i]);
+      // img.src = photos[i];
       img.alt = "";
       overlayText.innerHTML = `<p class="card-text" data-file=""></p>`;
     } else {
       let name = photos[i].match(/CSVs\/(.+)\./i)[1];
-      img.src = bucketLink + photos[i];
+      img.setAttribute("data-src", bucketLink + photos[i]);
+      // img.src = bucketLink + photos[i];
       img.alt = name;
       overlayText.innerHTML = `<p class="card-text" data-file="${photos[i]}">${name}</p>`;
     }
@@ -177,6 +185,9 @@ const showGallery = () => {
     card.appendChild(overlayText);
     gcolums[i % 4].appendChild(card);
 
+    if (lazyLoadInstance) {
+      lazyLoadInstance.update();
+    }
   }
 };
 
