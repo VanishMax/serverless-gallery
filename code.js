@@ -1,4 +1,4 @@
-const bucketLink = "http://serverlessgallery.s3.amazonaws.com/";
+const bucketLink = "https://serverlessgallery.s3.amazonaws.com/";
 let photos = [];
 let selected = [];
 let isGalleryOpened = false;
@@ -28,7 +28,6 @@ const handleDeleteOne = () => {
 
 const handleDownloadMulti = () => {
   for(let select of selected) {
-    console.log(select);
     document.getElementById("downloadMultiLink").href = bucketLink + select;
     document.getElementById("downloadMultiLink").click();
   }
@@ -172,7 +171,7 @@ const showGallery = () => {
       img.alt = "";
       overlayText.innerHTML = `<p class="card-text" data-file=""></p>`;
     } else {
-      let name = photos[i].match(/CSVs\/(.+)\./i)[1];
+      let name = (photos[i].match(/CSVs\/(.+)\./i) || ['', ''])[1];
       img.setAttribute("data-src", bucketLink + photos[i]);
       // img.src = bucketLink + photos[i];
       img.alt = name;
